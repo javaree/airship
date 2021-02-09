@@ -1,0 +1,257 @@
+//Objects
+Player player = new Player();
+//Bullet arraylist
+ArrayList<Bullet> bullets;
+//Vars to regulate shooting speed
+boolean canShoot = true;
+float canShootCounter;
+
+int i;
+
+void setup() {
+  size(800, 600);
+  //standard array setup
+  bullets = new ArrayList<Bullet>();
+  player = new Player();
+}
+
+void draw() {
+  player.update();
+  background(100);
+  //since we are adding and removing objects so often, we need to do the forloop backwards preventing any nullPointer errors
+  for (i = bullets.size()-1; i >= 0; i--) {
+    //you need a seperate var to get the object from the bullets arraylist then use that variable to call the functions
+    Bullet bullet = bullets.get(i);
+    bullet.update();
+  }
+}
+
+class Player {
+  PVector location;
+  Player() {
+    location = new PVector(width/2, height/2);
+  } 
+  void update() {
+    if (mousePressed == true) {
+      // this regulates the shooting speed
+      if (canShoot == true) {
+        bullets.add( new Bullet());
+        canShoot = false;
+        canShootCounter = 0;
+      }
+    }
+    // this checks if the right amount of time has passed before canShoot can = true again
+    if (canShoot == false) {
+      canShootCounter ++;
+      //if the right amount of time has passed. make canShoot true
+      if (canShootCounter == 5)/*change this number to change the duration*/{
+        canShoot = true;
+      }
+    }
+  }
+}
+
+class Bullet {
+  //standard PVector used for the location of the bullet
+  PVector location;
+  //vars used to check the angle between location and the mouse
+  float oldPosX, oldPosY, rotation, speed;
+  Bullet() {
+    //places the bullet in the middle of the room
+    location= new PVector(width/2, height/2);
+    //this checks the angle
+    oldPosX = mouseX;
+    oldPosY = mouseY;
+    rotation = atan2(oldPosY - location.y, oldPosX - location.x) / PI * 180;
+    //bullet speed
+    speed = 10;//change this number to change the speed
+  } 
+  void update() {
+    //move the bullet
+    location.x = location.x + cos(rotation/180*PI)*speed;
+    location.y = location.y + sin(rotation/180*PI)*speed;
+    ellipse(location.x, location.y, 10, 10);
+
+    //removes the bullet from the arrayList if it is off the room
+    if (location.x > 0 && location.x < width && location.y > 0 && location.x < height) {
+    }
+    else {
+      bullets.remove(i);
+    }
+  }
+}ArrayList <Spider> spiders = new ArrayList<Spider>();
+PImage bg;
+int numSpiders = 10;
+boolean [] keys;
+Player player;
+
+void setup() {
+  size(600, 600);
+  frameRate(60);  
+  bg = loadImage("grass.jpg");
+  player = new Player();
+  for (int i = 0; i < numSpiders; i++) {
+    spiders.add(new Spider());
+    keys = new boolean[128];
+  }
+}
+
+
+void draw() { 
+  image(bg, 0, 0);  
+  move();
+  player.drawPlayer();
+  for (int i = 0; i < numSpiders; i++) {
+    spiders.get(i).drawSpider();
+  }
+}
+
+  void move() {
+    int xDelta = 0;
+    int yDelta = 0;
+
+    if (keys['a'])
+      xDelta = xDelta - 2;
+
+    if (keys['d'])
+      xDelta = xDelta + 2;
+
+    if (keys['s'])
+      yDelta = yDelta + 2;
+
+    if (keys['w'])
+      yDelta = yDelta - 2;
+
+    player.updatePlayer(xDelta, yDelta);
+  }
+  void keyPressed() {
+  keys[key] = true;
+}
+
+void keyReleased() {
+  keys[key] = false;
+}class Player {
+  float x, y;
+  PImage spriteSheet;
+  PImage [][] movement;
+  boolean inMotion;
+  int currentDirection;
+  float currentFrame;
+  final int UP = 0, LEFT = 1, DOWN = 2, RIGHT = 3;
+
+  Player() {
+    inMotion = false;
+    currentDirection = 1;
+    currentFrame = 0;
+    x = width/2;
+    y = height/2;
+
+    setupSprites();
+  }
+
+  void setupSprites() {
+    movement = new PImage[4][9];
+    spriteSheet = loadImage("Spritesheet.png");
+    for (int i = 0; i < 9; i++) {
+      movement[0][i] = spriteSheet.get(16 + 64 * i, 8, 32, 56);
+      movement[1][i] = spriteSheet.get(16 + 64 * i, 72, 32, 56);
+      movement[2][i] = spriteSheet.get(16 + 64 * i, 136, 32, 56);
+      movement[3][i] = spriteSheet.get(16 + 64 * i, 200, 32, 56);
+    }
+  }
+
+  void drawPlayer() {
+    if (inMotion)
+      image(movement[currentDirection][1 + int (currentFrame)], x, y);
+    else
+      image(movement[currentDirection][0], x, y);
+  }
+
+
+
+  void updatePlayer(int xDelta, int yDelta) {
+    currentFrame = (currentFrame + 0.5) % 8;
+    inMotion =  true;
+
+    if (xDelta == 0 && yDelta == 0)
+      inMotion = false;
+    else if (xDelta == -2)
+      currentDirection = LEFT;
+    else if (xDelta == 2)
+      currentDirection = RIGHT;
+    else if (yDelta == -2)
+      currentDirection = UP;
+    else if (yDelta == 2)
+      currentDirection = DOWN;
+
+    x = x + xDelta;
+    y = y + yDelta;
+
+    if(isPlayerOffScreen(x, y)) {
+      x = x - xDelta;
+      y = y - yDelta;
+    }
+  }
+
+  boolean isPlayerOffScreen(float x, float y) {
+    if (x < 0 || x > width - 30 ||
+      y < 0 || y > height - 56)
+      return true;
+    return false;
+  }
+}class Spider {
+  float x, y;
+  PVector speed;
+  PImage img;
+  
+
+
+  Spider() {
+    x = random(50, 450);
+    y = random(50, 450);
+    speed = new PVector();
+    speed.x = random(-1, 1);
+    speed.y = random(-1, 1);
+    img = loadImage("spider.png");
+    
+  }
+
+
+  void drawSpider() {
+    moveSpider();
+    pushMatrix();
+    translate(x + img.width/2, y + img.height/2);
+    img.resize(0, 40);
+    rotate(speed.heading() + PI/2);
+    translate(-img.width/2, -img.height/2); 
+    image(img, 0, 0);
+    popMatrix();
+  }
+
+  void moveSpider() {
+    float testMove = random(0, 1);
+    if (testMove < 0.10) {
+      speed.rotate(random(-0.4, 0.4));
+    }
+
+    if (testMove > 0.97) {
+      speed.rotate(random(-1, 1));
+    }
+    x = x + speed.x;
+    y = y + speed.y;
+
+
+    if (isSpiderOffScreen() == true) {
+      x = x - speed.x;
+      y = y - speed.y;
+      speed.rotate(random(-2, 2));
+    }
+  }
+
+  boolean isSpiderOffScreen() {
+    if (x < 30 || x > width - 30 || 
+      y < 30 || y > height - 30)
+      return true;
+    return false;
+  }
+}```
